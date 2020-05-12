@@ -7,7 +7,7 @@ from .base import ISDataset
 
 class GeoStarDataset(ISDataset):
     def __init__(self, dataset_path, 
-                images_dir_name="images", masks_dir_name="images_gt",
+                images_dir_name="images", masks_dir_name="images-gt",
                 **kwargs):
         super(GeoStarDataset, self).__init__(**kwargs)
 
