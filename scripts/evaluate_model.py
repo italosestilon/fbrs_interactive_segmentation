@@ -28,6 +28,8 @@ def parse_args():
                              'GrabCut, Berkeley, DAVIS, COCO_MVal, SBD, GeoStar')
     parser.add_argument('--n-clicks', type=int, default=20,
                         help='Maximum number of clicks for the NoC metric.')
+    parser.add_argument('--optimize-after-n-clicks', type=int, default=1,
+                        help="Start optimize prefictor after this number of clicks.")
     parser.add_argument('--gpus', type=str, default='0',
                         help='ID of used GPU.')
     parser.add_argument('--cpu', action='store_true', default=False,
@@ -42,6 +44,8 @@ def parse_args():
                         help='The path to the config file.')
     parser.add_argument('--logs-path', type=str, default='',
                         help='The path to the evaluation logs. Default path: cfg.EXPS_PATH/evaluation_logs.')
+    parser.add_argument('--initial-markers', action='store_true', default=False,
+                        help="If dataset has initial markers, use them as first clicks.")
 
     args = parser.parse_args()
     if args.cpu:
@@ -69,15 +73,19 @@ def main():
     eval_exp_name = get_eval_exp_name(args)
     eval_exp_path = args.logs_path / eval_exp_name
     eval_exp_path.mkdir(parents=True, exist_ok=True)
-    predictor_params = None
+
+    predictor_params = {
+        'optimize_after_n_clicks': args.optimize_after_n_clicks
+    }
+
     if args.clicks_limit is not None:
         if args.clicks_limit == -1:
             args.clicks_limit = args.n_clicks
-        predictor_params = {'net_clicks_limit': args.clicks_limit}
+        predictor_params['net_clicks_limit'] = args.clicks_limit,
 
     print_header = True
     for dataset_name in args.datasets.split(','):
-        dataset = utils.get_dataset(dataset_name, cfg)
+        dataset = utils.get_dataset(dataset_name, cfg, initial_markers=args.initial_markers)
 
         zoom_in_target_size = 600 if dataset_name == 'DAVIS' else 400
         predictor = get_predictor(model, args.mode, args.device,
@@ -87,7 +95,8 @@ def main():
 
         dataset_results = evaluate_dataset(dataset, predictor, pred_thr=args.thresh,
                                            max_iou_thr=args.target_iou,
-                                           max_clicks=args.n_clicks)
+                                           max_clicks=args.n_clicks,
+                                           initial_markers=args.initial_markers)
 
         save_results(args, dataset_name, eval_exp_path, dataset_results,
                      print_header=print_header)
