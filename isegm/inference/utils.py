@@ -10,12 +10,13 @@ from isegm.data.berkeley import BerkeleyDataset
 from isegm.data.grabcut import GrabCutDataset
 from isegm.data.davis import DavisDataset
 from isegm.data.sbd import SBDEvaluationDataset
+from isegm.data.geostar import GeoStarDataset
 
 
 def get_time_metrics(all_ious, elapsed_time):
     n_images = len(all_ious)
     n_clicks = sum(map(len, all_ious))
-
+    
     mean_spc = elapsed_time / n_clicks
     mean_spi = elapsed_time / n_images
 
@@ -117,6 +118,8 @@ def get_dataset(dataset_name, cfg):
         dataset = SBDEvaluationDataset(cfg.SBD_PATH)
     elif dataset_name == 'SBD_Train':
         dataset = SBDEvaluationDataset(cfg.SBD_PATH, split='train')
+    elif dataset_name == 'GeoStar':
+        dataset = GeoStarDataset(cfg.GEOSTAR_PATH)
     else:
         dataset = None
 
