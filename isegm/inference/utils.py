@@ -105,7 +105,7 @@ def load_deeplab_is_model(state_dict, device, backbone='auto', deeplab_ch=128, a
     return model
 
 
-def get_dataset(dataset_name, cfg):
+def get_dataset(dataset_name, cfg, initial_markers=False):
     if dataset_name == 'GrabCut':
         dataset = GrabCutDataset(cfg.GRABCUT_PATH)
     elif dataset_name == 'Berkeley':
@@ -119,7 +119,7 @@ def get_dataset(dataset_name, cfg):
     elif dataset_name == 'SBD_Train':
         dataset = SBDEvaluationDataset(cfg.SBD_PATH, split='train')
     elif dataset_name == 'GeoStar':
-        dataset = GeoStarDataset(cfg.GEOSTAR_PATH)
+        dataset = GeoStarDataset(cfg.GEOSTAR_PATH, initial_markers=initial_markers)
     else:
         dataset = None
 
