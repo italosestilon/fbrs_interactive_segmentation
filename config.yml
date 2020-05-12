@@ -6,6 +6,7 @@ BERKELEY_PATH: "/datasets/InteractiveSegmentation/Berkeley"
 DAVIS_PATH: "/datasets/InteractiveSegmentation/DAVIS"
 SBD_PATH: "/datasets/InteractiveSegmentation/SBD"
 COCO_MVAL_PATH: "/datasets/InteractiveSegmentation/COCO_MVal"
+GEOSTAR_PATH: "/datasets/InteractiveSegmentation/geostar"
 
 # You can download the weights for HRNet from the repository:
 # https://github.com/HRNet/HRNet-Image-Classification
