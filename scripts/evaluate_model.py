@@ -25,7 +25,7 @@ def parse_args():
     parser.add_argument('--datasets', type=str, default='GrabCut,Berkeley,DAVIS,COCO_MVal,SBD',
                         help='List of datasets on which the model should be tested. '
                              'Datasets are separated by a comma. Possible choices: '
-                             'GrabCut, Berkeley, DAVIS, COCO_MVal, SBD')
+                             'GrabCut, Berkeley, DAVIS, COCO_MVal, SBD, GeoStar')
     parser.add_argument('--n-clicks', type=int, default=20,
                         help='Maximum number of clicks for the NoC metric.')
     parser.add_argument('--gpus', type=str, default='0',
