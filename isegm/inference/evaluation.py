@@ -69,7 +69,6 @@ def evaluate_sample(image_nd, instances_mask, predictor, max_iou_thr,
             iou = utils.get_iou(instances_mask, pred_mask)
             ious_list.append(iou)
     
-
             if iou >= max_iou_thr:
                 break
 
