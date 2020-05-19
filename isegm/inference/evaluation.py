@@ -5,6 +5,7 @@ import torch
 
 from isegm.inference import utils
 from isegm.inference.clicker import Clicker, Click
+from isegm.inference.davis_clicker import DAVISClicker
 
 try:
     get_ipython()
@@ -51,9 +52,10 @@ def evaluate_dataset(dataset, predictor, oracle_eval=False, initial_markers=Fals
 
 def evaluate_sample(image_nd, instances_mask, predictor, max_iou_thr,
                     pred_thr=0.49, max_clicks=20, initial_clicks=None):
-    clicker = Clicker(gt_mask=instances_mask, init_clicks=initial_clicks)
+    clicker = DAVISClicker(gt_mask=instances_mask, init_clicks=initial_clicks)
     pred_mask = np.zeros_like(instances_mask)
     ious_list = []
+    mean_ious_list = []
 
     with torch.no_grad():
         predictor.set_input_image(image_nd)
@@ -66,6 +68,7 @@ def evaluate_sample(image_nd, instances_mask, predictor, max_iou_thr,
 
             iou = utils.get_iou(instances_mask, pred_mask)
             ious_list.append(iou)
+    
 
             if iou >= max_iou_thr:
                 break

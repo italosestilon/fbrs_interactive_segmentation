@@ -11,6 +11,8 @@ from isegm.data.grabcut import GrabCutDataset
 from isegm.data.davis import DavisDataset
 from isegm.data.sbd import SBDEvaluationDataset
 from isegm.data.geostar import GeoStarDataset
+from isegm.inference.operations import bezier_curve
+from isegm.inference.operations import bresenham as bresenham_function
 
 
 def get_time_metrics(all_ious, elapsed_time):
@@ -201,3 +203,83 @@ def get_results_table(noc_list, over_max_list, brs_type, dataset_name, mean_spc,
     table_row += f'{mean_spc:^7.3f}|{eval_time:^9}|'
 
     return header, table_row
+
+# get from https://github.com/albertomontesg/davis-interactive/
+def scribbles2mask(scribbles,
+                   output_resolution,
+                   bezier_curve_sampling=False,
+                   nb_points=1000,
+                   bresenham=True,
+                   default_value=-1):
+    """ Convert the scribbles data into a mask.
+    # Arguments
+        scribbles: Dictionary. Scribbles in the default format.
+        output_resolution: Tuple. Output resolution (H, W).
+        bezier_curve_sampling: Boolean. Weather to sample first the returned
+            scribbles using bezier curve or not.
+        nb_points: Integer. If `bezier_curve_sampling` is `True` set the number
+            of points to sample from the bezier curve.
+        bresenham: Boolean. Whether to compute bresenham algorithm for the
+            scribbles lines.
+        default_value: Integer. Default value for the pixels which do not belong
+            to any scribble.
+    # Returns
+        ndarray: Array with the mask of the scribbles with the index of the
+            object ids. The shape of the returned array is (B x H x W) by
+            default or (H x W) if `only_annotated_frame==True`.
+    """
+    if len(output_resolution) != 2:
+        raise ValueError(
+            'Invalid output resolution: {}'.format(output_resolution))
+    for r in output_resolution:
+        if r < 1:
+            raise ValueError(
+                'Invalid output resolution: {}'.format(output_resolution))
+
+    nb_frames = len(scribbles['scribbles'])
+    masks = np.full(
+        (nb_frames,) + output_resolution, default_value, dtype=np.int)
+
+    size_array = np.asarray(output_resolution[::-1], dtype=np.float) - 1
+
+    for f in range(nb_frames):
+        sp = scribbles['scribbles'][f]
+        for p in sp:
+            path = p['path']
+            obj_id = p['object_id']
+            path = np.asarray(path, dtype=np.float)
+            if bezier_curve_sampling:
+                path = bezier_curve(path, nb_points=nb_points)
+            path *= size_array
+            path = path.astype(np.int)
+
+            if bresenham:
+                path = bresenham_function(path)
+            m = masks[f]
+
+            m[path[:, 1], path[:, 0]] = obj_id
+            masks[f] = m
+    #io.imsave('davis_markers.png', normalize_image(masks[0]))
+    return masks
+
+def fuse_scribbles(scribbles_a, scribbles_b):
+    """ Fuse two scribbles in the default format.
+    # Arguments
+        scribbles_a: Dictionary. Default representation of scribbles A.
+        scribbles_b: Dictionary. Default representation of scribbles B.
+    # Returns
+        dict: Returns a dictionary with scribbles A and B fused.
+    """
+
+    if scribbles_a['sequence'] != scribbles_b['sequence']:
+        raise ValueError('Scribbles to fuse are not from the same sequence')
+    if len(scribbles_a['scribbles']) != len(scribbles_b['scribbles']):
+        raise ValueError('Scribbles does not have the same number of frames')
+
+    scribbles = dict(scribbles_a)
+    nb_frames = len(scribbles['scribbles'])
+
+    for i in range(nb_frames):
+        scribbles['scribbles'][i] += scribbles_b['scribbles'][i]
+
+    return scribbles

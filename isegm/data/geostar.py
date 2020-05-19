@@ -35,7 +35,8 @@ class GeoStarDataset(ISDataset):
         image = cv2.imread(image_path)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         instances_mask = np.max(cv2.imread(mask_path).astype(np.int32), axis=2)
-        instances_mask[instances_mask > 0] = 1
+        instances_mask[instances_mask  == 255] = 1
+        instances_mask[instances_mask  == 128] = -1
         markers = None
         if self._initial_markers:
             markers = np.max(cv2.imread(markers_path).astype(np.int32), axis=2)
